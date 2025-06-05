@@ -28,6 +28,7 @@ import {
 } from '../services/aiService';
 import FreedomSlider from './FreedomSlider';
 import PersonaMeter from './PersonaMeter';
+import TraitMatrixScreen from './TraitMatrixScreen';
 
 const { width, height } = Dimensions.get('window');
 
@@ -461,7 +462,11 @@ export default function SceneScreen({ navigation }) {
     watchAdForEnergy,
     upgradeToPremium,
     getTimeUntilNextEnergyRefill,
-    canGenerateScene
+    canGenerateScene,
+    // Phase 5: Enhanced persona scoring functions
+    scoreEnhancedDecision,
+    getTraitMatrixSummary,
+    getEnhancedPersonaSummary
   } = useGame();
   
   const [isLoading, setIsLoading] = useState(false);
@@ -481,6 +486,9 @@ export default function SceneScreen({ navigation }) {
   const [currentAtmosphere, setCurrentAtmosphere] = useState('auto');
   const [showAdvancedFeatures, setShowAdvancedFeatures] = useState(false);
   const [realTimeAnalysis, setRealTimeAnalysis] = useState(true);
+  
+  // Phase 5: Trait Matrix Screen state
+  const [showTraitMatrix, setShowTraitMatrix] = useState(false);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -632,6 +640,32 @@ export default function SceneScreen({ navigation }) {
 
       console.log('🎭 Processing choice with persona impact:', customChoice.persona_impact);
       console.log('🎭 Current persona score before action:', state.personaScore);
+      
+      // Phase 5: Enhanced decision scoring
+      if (state.traitMatrixInitialized) {
+        const decisionData = {
+          playerAction: promptData?.originalInput || playerInput,
+          sceneContext: state.currentScene?.narrative || '',
+          characterExpected: {
+            name: state.selectedCharacter?.name,
+            traits: state.selectedCharacter?.traits
+          },
+          importance: 'medium' // Could be determined by scene context
+        };
+        
+        console.log('🧠 Scoring decision with enhanced persona system...');
+        const scoringResult = await scoreEnhancedDecision(decisionData);
+        
+        if (scoringResult) {
+          console.log(`✅ Enhanced scoring complete: ${scoringResult.enhancedScore.toFixed(1)}/100`);
+          console.log(`🔄 Matrix change score: ${scoringResult.matrixChangeScore.toFixed(1)}`);
+          console.log(`📊 Consistency score: ${scoringResult.consistencyScore.toFixed(1)}`);
+          
+          if (scoringResult.traitEvolution) {
+            console.log('🌱 Trait evolution detected:', Object.keys(scoringResult.traitEvolution.traitChanges || {}));
+          }
+        }
+      }
 
       if (state.currentStory?.isAIGenerated) {
         try {
@@ -1087,6 +1121,20 @@ export default function SceneScreen({ navigation }) {
                                 </Text>
                               </TouchableOpacity>
                             </View>
+                            
+                            {/* Phase 5: Trait Matrix Button */}
+                            {state.traitMatrixInitialized && (
+                              <View style={styles.featureToggle}>
+                                <TouchableOpacity
+                                  style={[styles.toggleButton, styles.traitMatrixButton]}
+                                  onPress={() => setShowTraitMatrix(true)}
+                                >
+                                  <Text style={[styles.toggleText, styles.traitMatrixButtonText]}>
+                                    🧠 Character Trait Matrix
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                            )}
                           </View>
                         )}
                       
@@ -1168,6 +1216,14 @@ export default function SceneScreen({ navigation }) {
         </View>
         </View>
       </View>
+      
+      {/* Phase 5: Trait Matrix Screen */}
+      <TraitMatrixScreen
+        visible={showTraitMatrix}
+        onClose={() => setShowTraitMatrix(false)}
+        storyId={state.currentStory?.id}
+        characterName={state.selectedCharacter?.name}
+      />
     </KeyboardAvoidingView>
   );
 }
@@ -1864,5 +1920,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  // Phase 5: Trait Matrix Button Styles
+  traitMatrixButton: {
+    backgroundColor: 'rgba(74, 144, 226, 0.2)',
+    borderWidth: 2,
+    borderColor: '#4a90e2',
+  },
+  traitMatrixButtonText: {
+    color: '#4a90e2',
+    fontWeight: 'bold',
   },
 }); 

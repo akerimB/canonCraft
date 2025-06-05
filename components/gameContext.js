@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useReducer } from 'react';
 import { generateInitialScene, generateNextScene as aiGenerateNextScene, generateNextSceneWithIntelligence, initializeStorySession } from '../services/aiService';
 import { databaseMemory } from '../services/databaseMemorySystem';
+// Phase 5: Enhanced Persona Scoring Integration
+import { enhancedPersonaScoring } from '../services/enhancedPersonaScoring';
+import { characterTraitMatrix } from '../services/characterTraitMatrix';
 
 const GameContext = createContext();
 
@@ -24,6 +27,19 @@ const initialState = {
   lastEnergyRefill: new Date().toISOString(),
   premiumUser: false, // Premium users have unlimited energy
   energyRefillTime: 4 * 60 * 60 * 1000, // 4 hours in milliseconds
+  
+  // Phase 5: Enhanced Psychological Profiling
+  enhancedScoring: {
+    matrixChangeScore: 0,
+    consistencyScore: 100,
+    psychologicalDepth: 50,
+    consciousSubconsciousBalance: { balance: 0.5, type: 'balanced' },
+    traitEvolutionCount: 0,
+    dominantTraits: [],
+    lastAssessment: null
+  },
+  traitMatrixInitialized: false,
+  playerAge: null, // Optional player age for trait matrix adjustments
 };
 
 function gameReducer(state, action) {
@@ -138,6 +154,44 @@ function gameReducer(state, action) {
         };
       }
       return state;
+    
+    // Phase 5: Enhanced Persona Scoring Actions
+    case 'INITIALIZE_TRAIT_MATRIX':
+      return {
+        ...state,
+        traitMatrixInitialized: true,
+        playerAge: action.payload.playerAge
+      };
+    
+    case 'UPDATE_ENHANCED_SCORING':
+      return {
+        ...state,
+        enhancedScoring: {
+          ...state.enhancedScoring,
+          ...action.payload
+        }
+      };
+    
+    case 'SET_TRAIT_MATRIX_DATA':
+      return {
+        ...state,
+        enhancedScoring: {
+          ...state.enhancedScoring,
+          dominantTraits: action.payload.dominantTraits || [],
+          matrixChangeScore: action.payload.matrixChangeScore || 0,
+          consciousSubconsciousBalance: action.payload.consciousSubconsciousBalance || state.enhancedScoring.consciousSubconsciousBalance
+        }
+      };
+    
+    case 'ADD_PSYCHOLOGICAL_ASSESSMENT':
+      return {
+        ...state,
+        enhancedScoring: {
+          ...state.enhancedScoring,
+          lastAssessment: action.payload
+        }
+      };
+    
     default:
       return state;
   }
@@ -155,7 +209,7 @@ export function GameProvider({ children }) {
     addChoice: (choice) => dispatch({ type: 'ADD_CHOICE', payload: choice }),
     updatePersonaScore: (score) => dispatch({ type: 'UPDATE_PERSONA_SCORE', payload: score }),
     setStoryPacks: (packs) => dispatch({ type: 'SET_STORY_PACKS', payload: packs }),
-    startAIStory: async (story) => {
+    startAIStory: async (story, playerAge = null) => {
       console.log('🎬 Starting AI Story with character:', story);
       console.log('Character properties:', {
         id: story.id,
@@ -174,6 +228,17 @@ export function GameProvider({ children }) {
       try {
         // Initialize story session with Phase 2 systems
         const sessionId = await initializeStorySession(story);
+        
+        // Phase 5: Initialize enhanced persona scoring and trait matrix
+        console.log('🧠 Initializing Phase 5 enhanced persona scoring...');
+        await enhancedPersonaScoring.initializeScoring(story, sessionId, playerAge);
+        dispatch({ type: 'INITIALIZE_TRAIT_MATRIX', payload: { playerAge } });
+        
+        // Get initial trait matrix data
+        const matrixSummary = characterTraitMatrix.getMatrixSummary(sessionId);
+        if (matrixSummary) {
+          dispatch({ type: 'SET_TRAIT_MATRIX_DATA', payload: matrixSummary });
+        }
         
         // Generate the initial scene with intelligence systems and default freedom level
         const initialScene = await generateNextSceneWithIntelligence(
@@ -197,6 +262,74 @@ export function GameProvider({ children }) {
       } finally {
         dispatch({ type: 'SET_GENERATING', payload: false });
       }
+    },
+    
+    // Phase 5: Enhanced Persona Scoring Helper Functions
+    scoreEnhancedDecision: async (decisionData) => {
+      try {
+        const result = await enhancedPersonaScoring.scoreEnhancedDecision(decisionData);
+        
+        if (result) {
+          // Update traditional persona score
+          dispatch({ type: 'UPDATE_PERSONA_SCORE', payload: result.currentScore });
+          
+          // Update enhanced scoring metrics
+          dispatch({ type: 'UPDATE_ENHANCED_SCORING', payload: {
+            matrixChangeScore: result.matrixChangeScore,
+            consistencyScore: result.consistencyScore,
+            psychologicalDepth: result.enhancedScore,
+            traitEvolutionCount: result.traitEvolution ? 1 : 0
+          }});
+          
+          // Update trait matrix data if changed
+          if (result.traitEvolution) {
+            const matrixSummary = characterTraitMatrix.getMatrixSummary(state.currentStory?.id);
+            if (matrixSummary) {
+              dispatch({ type: 'SET_TRAIT_MATRIX_DATA', payload: matrixSummary });
+            }
+          }
+          
+          // Handle score reveals and assessments
+          if (result.shouldReveal && result.revealData?.enhancedData) {
+            const enhancedData = result.revealData.enhancedData;
+            
+            // Store latest assessment
+            if (enhancedData.traitInsights) {
+              dispatch({ type: 'ADD_PSYCHOLOGICAL_ASSESSMENT', payload: enhancedData.traitInsights });
+            }
+            
+            // Update psychological growth metrics
+            if (enhancedData.psychologicalGrowth) {
+              dispatch({ type: 'UPDATE_ENHANCED_SCORING', payload: {
+                traitEvolutionCount: enhancedData.psychologicalGrowth.traitEvolutionCount
+              }});
+            }
+            
+            // Update consciousness balance
+            if (enhancedData.consciousSubconsciousBalance) {
+              dispatch({ type: 'UPDATE_ENHANCED_SCORING', payload: {
+                consciousSubconsciousBalance: enhancedData.consciousSubconsciousBalance
+              }});
+            }
+          }
+        }
+        
+        return result;
+      } catch (error) {
+        console.error('Failed to score enhanced decision:', error);
+        return null;
+      }
+    },
+    
+    getTraitMatrixSummary: () => {
+      if (state.currentStory?.id) {
+        return characterTraitMatrix.getMatrixSummary(state.currentStory.id);
+      }
+      return null;
+    },
+    
+    getEnhancedPersonaSummary: () => {
+      return enhancedPersonaScoring.getEnhancedPersonaSummary();
     },
     generateNextScene: async (choice, freedomLevel = 50) => {
       dispatch({ type: 'SET_GENERATING', payload: true });
