@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   StatusBar,
 } from 'react-native';
-import { useGame } from '../gameContext';
+import { useGame } from './gameContext';
 
 export default function SummaryScreen({ navigation }) {
   const { state, resetGame, getPersonaMessage } = useGame();

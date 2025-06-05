@@ -1,0 +1,67 @@
+Category,Subcategory,Trait/Behavior/Emotion,Description,Valence,Cognitive Involvement,Social Impact,Conscious/Subconscious
+Behavior,Maladaptive,Procrastination,Delaying tasks unnecessarily,Negative,High,Medium,Both
+Behavior,Adaptive,Resilience,Ability to recover from setbacks,Positive,High,Medium,Both
+Behavior,Adaptive,Mindfulness,Focused awareness of the present moment,Positive,High,Low,Conscious
+Behavior,Adaptive,Assertiveness,Ability to express one's opinions confidently and respectfully,Positive,High,High,Conscious
+Behavior,Maladaptive,Rumination,Repetitive focus on distressing situations or thoughts,Negative,High,Medium,Subconscious
+Behavior,Maladaptive,Avoidance,Deliberately steering clear of distressing situations,Negative,Medium,Medium,Subconscious
+Behavior,Maladaptive,Passive Aggression,Indirect resistance or hostility,Negative,Medium,High,Subconscious
+Behavior,Adaptive,Time Management,Effective planning and use of time,Positive,High,Medium,Conscious
+Behavior,Adaptive,Active Listening,Fully concentrating and responding thoughtfully,Positive,High,High,Conscious
+Emotion,Complex Emotions,Guilt,A feeling of responsibility for a wrongdoing,Negative,High,Medium,Both
+Emotion,Complex Emotions,Shame,A painful feeling of humiliation or distress,Negative,Medium,High,Both
+Emotion,Complex Emotions,Pride,A feeling of deep pleasure from one's achievements,Positive,Medium,High,Conscious
+Emotion,Complex Emotions,Gratitude,A readiness to show appreciation,Positive,High,High,Conscious
+Emotion,Complex Emotions,Jealousy,Fear of losing something of value to another person,Negative,Medium,High,Both
+Emotion,Complex Emotions,Hope,Feeling of expectation and desire for a certain thing to happen,Positive,High,Medium,Conscious
+Emotion,Complex Emotions,Awe,Overwhelming feeling of reverence and admiration,Positive,High,Medium,Both
+Emotion,Basic Emotions,Happiness,A state of well-being and contentment,Positive,Low,High,Conscious
+Emotion,Basic Emotions,Sadness,A feeling of sorrow or unhappiness,Negative,Low,Medium,Conscious
+Emotion,Basic Emotions,Fear,An unpleasant emotion caused by perceived danger,Negative,Medium,High,Both
+Emotion,Basic Emotions,Anger,A strong feeling of displeasure or hostility,Negative,Medium,High,Both
+Emotion,Basic Emotions,Surprise,A brief emotional response to unexpected events,Neutral,Medium,Medium,Both
+Emotion,Basic Emotions,Disgust,A strong aversion toward something offensive,Negative,Low,High,Both
+Emotion,Social Emotions,Embarrassment,A feeling of self-consciousness or shame,Negative,Medium,High,Both
+Emotion,Social Emotions,Admiration,Respect and warm approval,Positive,Medium,High,Conscious
+Emotion,Social Emotions,Sympathy,Feelings of pity and sorrow for someone else's misfortune,Positive,Medium,High,Conscious
+Emotion,Social Emotions,Empathy,Understanding and sharing the feelings of another,Positive,High,High,Both
+Emotion,Moral Emotions,Elevation,"A warm, uplifting feeling from witnessing moral beauty",Positive,High,High,Conscious
+Emotion,Moral Emotions,Contempt,A feeling of disdain or lack of respect,Negative,Medium,High,Both
+Emotion,Complex Emotions,Loneliness,A feeling of sadness due to lack of social connection,Negative,Medium,High,Both
+Emotion,Complex Emotions,Envy,Desire for something another person possesses,Negative,Medium,High,Both
+Emotion,Complex Emotions,Contentment,A state of peaceful happiness,Positive,Low,Medium,Conscious
+Emotion,Complex Emotions,Frustration,Feeling of being upset due to unmet expectations,Negative,Medium,Medium,Both
+Personality Trait,Dark Triad,Machiavellianism,Manipulativeness and a cynical view of human nature,Negative,High,High,Subconscious
+Personality Trait,Dark Triad,Narcissism,Excessive interest in oneself and one's appearance,Negative,Medium,High,Subconscious
+Personality Trait,Dark Triad,Psychopathy,Lack of empathy and remorse,Negative,Low,High,Subconscious
+Personality Trait,Attachment Style,Secure Attachment,Healthy emotional bond with comfort in intimacy and independence,Positive,High,High,Both
+Personality Trait,Attachment Style,Anxious Attachment,Desire for closeness with fear of abandonment,Negative,Medium,High,Subconscious
+Personality Trait,Attachment Style,Avoidant Attachment,Discomfort with closeness and reliance on self,Negative,Medium,High,Subconscious
+Personality Trait,Attachment Style,Disorganized Attachment,Combination of anxious and avoidant behaviors,Negative,High,High,Subconscious
+Personality Trait,Big Five,Openness,"Imagination, creativity, and openness to experience",Positive,High,Medium,Both
+Personality Trait,Big Five,Conscientiousness,"Being diligent, careful, and organized",Positive,High,Medium,Conscious
+Personality Trait,Big Five,Extraversion,"Outgoing, energetic, and sociable behavior",Positive,Medium,High,Conscious
+Personality Trait,Big Five,Agreeableness,"Being cooperative, compassionate, and friendly",Positive,Medium,High,Conscious
+Personality Trait,Big Five,Neuroticism,Tendency to experience negative emotions,Negative,Medium,Medium,Subconscious
+Personality Trait,Temperament,Novelty Seeking,Tendency to seek new and exciting experiences,Neutral,High,Medium,Both
+Personality Trait,Temperament,Harm Avoidance,Tendency to avoid potentially harmful situations,Negative,Medium,Medium,Subconscious
+Personality Trait,Temperament,Reward Dependence,Responding markedly to signals of reward,Positive,Medium,High,Subconscious
+Personality Trait,Temperament,Persistence,Perseverance despite frustration and fatigue,Positive,High,Medium,Conscious
+Personality Trait,Temperament,Self-Directedness,Ability to regulate behavior in accordance with goals,Positive,High,High,Conscious
+Personality Trait,Temperament,Cooperativeness,How well a person gets along with others,Positive,Medium,High,Conscious
+Personality Trait,Temperament,Self-Transcendence,Tendency to view oneself as part of a broader whole,Positive,High,High,Conscious
+Personality Trait,Value Orientation,Altruism,Concern for the welfare of others,Positive,Medium,High,Both
+Personality Trait,Value Orientation,Power,Desire for control or influence over others,Neutral,Medium,High,Both
+Personality Trait,Value Orientation,Security,Desire for safety and stability,Neutral,Medium,Medium,Both
+Personality Trait,Value Orientation,Achievement,Striving to excel and succeed,Positive,High,Medium,Conscious
+Subconscious Trait,Defense Mechanisms,Projection,Attributing one’s own thoughts to others,Negative,Low,Medium,Subconscious
+Subconscious Trait,Defense Mechanisms,Displacement,Redirecting emotions to a safer outlet,Neutral,Medium,Medium,Subconscious
+Subconscious Trait,Defense Mechanisms,Sublimation,Redirecting impulses into acceptable activities,Positive,High,High,Subconscious
+Subconscious Trait,Cognitive Bias,Confirmation Bias,Tendency to search for or interpret information that confirms one's beliefs,Neutral,Medium,Medium,Subconscious
+Subconscious Trait,Cognitive Bias,Anchoring Bias,Relying too heavily on the first piece of information encountered,Neutral,Low,Low,Subconscious
+Subconscious Trait,Cognitive Bias,Availability Heuristic,Overestimating the importance of information that comes to mind quickly,Neutral,Low,Low,Subconscious
+Subconscious Trait,Defense Mechanisms,Repression,Unconscious blocking of unpleasant emotions or memories,Negative,Low,Low,Subconscious
+Subconscious Trait,Defense Mechanisms,Rationalization,Justifying controversial behaviors or feelings logically,Neutral,Medium,Medium,Subconscious
+Subconscious Trait,Defense Mechanisms,Reaction Formation,Behaving in a way opposite to true feelings,Neutral,Medium,Medium,Subconscious
+Subconscious Trait,Cognitive Bias,Dunning-Kruger Effect,Overestimating one's ability due to lack of knowledge,Neutral,Low,Medium,Subconscious
+Subconscious Trait,Cognitive Bias,Negativity Bias,Tendency to focus more on negative events,Negative,Medium,High,Subconscious

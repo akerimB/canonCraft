@@ -1,18 +1,18 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { GameContextProvider } from './gameContext';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { GameProvider } from './components/gameContext';
 import MenuScreen from './components/MenuScreen';
 import SceneScreen from './components/SceneScreen';
 import SummaryScreen from './components/SummaryScreen';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
-    <GameContextProvider>
+    <GameProvider>
       <NavigationContainer>
-        <Stack.Navigator
+        <Stack.Navigator 
           initialRouteName="Menu"
           screenOptions={{
             headerStyle: {
@@ -26,21 +26,21 @@ export default function App() {
         >
           <Stack.Screen 
             name="Menu" 
-            component={MenuScreen} 
+            component={MenuScreen}
             options={{ title: 'InCharacter' }}
           />
           <Stack.Screen 
             name="Scene" 
-            component={SceneScreen} 
-            options={{ title: 'Story' }}
+            component={SceneScreen}
+            options={{ title: 'Adventure' }}
           />
           <Stack.Screen 
             name="Summary" 
-            component={SummaryScreen} 
-            options={{ title: 'Chapter Complete' }}
+            component={SummaryScreen}
+            options={{ title: 'Adventure Complete' }}
           />
         </Stack.Navigator>
       </NavigationContainer>
-    </GameContextProvider>
+    </GameProvider>
   );
 } 
