@@ -627,9 +627,13 @@ Available traits to score: ${Object.keys(TRAIT_METADATA).join(', ')}`;
     });
 
     try {
-      return JSON.parse(response.choices[0].message.content);
+      const content = response.choices[0].message.content.trim();
+      // Remove any markdown code blocks if present
+      const cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(cleanedContent);
     } catch (error) {
       console.error('Failed to parse AI trait analysis:', error);
+      console.error('Response content:', response.choices[0].message.content);
       return { traits: {}, dominant_traits: [], character_archetype: 'Unknown' };
     }
   }
@@ -777,9 +781,13 @@ Available traits: ${dominantTraits.map(t => t.trait).join(', ')}`;
         max_tokens: 1024
       });
 
-      return JSON.parse(response.choices[0].message.content);
+      const content = response.choices[0].message.content.trim();
+      // Remove any markdown code blocks if present
+      const cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      return JSON.parse(cleanedContent);
     } catch (error) {
       console.error('Failed to analyze decision impact:', error);
+      console.error('Response content:', response.choices[0].message.content);
       return { changes: {}, reasoning: 'Analysis failed' };
     }
   }
@@ -846,7 +854,10 @@ Return JSON format:
         max_tokens: 1536
       });
 
-      const assessment = JSON.parse(response.choices[0].message.content);
+      const content = response.choices[0].message.content.trim();
+      // Remove any markdown code blocks if present
+      const cleanedContent = content.replace(/```json\n?|\n?```/g, '').trim();
+      const assessment = JSON.parse(cleanedContent);
       
       // Add metadata
       assessment.timestamp = new Date().toISOString();
@@ -857,6 +868,7 @@ Return JSON format:
       return assessment;
     } catch (error) {
       console.error('Failed to generate AI assessment:', error);
+      console.error('Response content:', response.choices[0].message.content);
       return {
         authenticity_score: 50,
         consistency_score: 50,

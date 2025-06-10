@@ -1,21 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ImageBackground,
-  StatusBar,
-  Alert,
   ActivityIndicator,
-  Dimensions,
-  Animated,
   Platform,
+  Dimensions,
+  Alert
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useGame } from './gameContext';
 import StorySessionManager from './StorySessionManager';
+import { BookOpen, Users, Settings, ArrowRight } from 'lucide-react-native';
+import SettingsScreen from './SettingsScreen';
 
 const { width } = Dimensions.get('window');
 
@@ -713,628 +712,211 @@ const STORY_WORLDS = [
   }
 ];
 
-export default function MenuScreen({ navigation }) {
-  const { state, setStoryPacks, startAIStory, loadGameState, dispatch } = useGame();
-  const [isGeneratingStory, setIsGeneratingStory] = useState(false);
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [showSessionManager, setShowSessionManager] = useState(false);
+const Header = ({ onSettingsPress }) => (
+  <View style={styles.header}>
+    <View>
+      <Text style={styles.headerTitle}>CanonCraft</Text>
+      <Text style={styles.headerSubtitle}>Your Story, Your Rules</Text>
+    </View>
+    <TouchableOpacity 
+        style={styles.headerIcon} 
+        onPress={onSettingsPress}
+    >
+      <Settings size={24} color="#FFFFFF" />
+    </TouchableOpacity>
+  </View>
+);
 
-  useEffect(() => {
-    // Load character packs and any saved game state
-    setStoryPacks(STORY_WORLDS);
-    loadGameState();
-    
-    // Fade in animation
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 1000,
-      useNativeDriver: false,
-    }).start();
-  }, []);
+const WorldCard = ({ world, onSelect }) => (
+  <TouchableOpacity onPress={onSelect} style={styles.worldCard}>
+    <Text style={styles.worldTitle}>{world.title}</Text>
+    <Text style={styles.worldDescription}>{world.description}</Text>
+    <View style={styles.worldFooter}>
+      <Text style={styles.worldAuthor}>{world.author}</Text>
+      <ArrowRight size={18} color="#FFFFFF" />
+    </View>
+  </TouchableOpacity>
+);
+
+const CharacterCard = ({ character, onSelect }) => (
+  <TouchableOpacity style={styles.characterCard} onPress={() => onSelect(character)}>
+    <Text style={styles.characterName}>{character.name}</Text>
+    <Text style={styles.characterDescription}>{character.description}</Text>
+    <View style={styles.characterFooter}>
+        <Text style={styles.selectText}>Play as {character.name.split(' ')[0]}</Text>
+        <ArrowRight size={18} color="#FFFFFF" />
+    </View>
+  </TouchableOpacity>
+);
+
+export default function MenuScreen({ navigation }) {
+  const { state, startNewStory, loadStoryFromSave } = useGame();
+  const [selectedWorld, setSelectedWorld] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSettingsVisible, setSettingsVisible] = useState(false);
 
   const handleCharacterSelect = async (character) => {
-    setIsGeneratingStory(true);
-    setSelectedCharacter(character);
-    
+    setIsLoading(true);
     try {
-      // Create character pack in the flat format expected by the AI service
-      const world = STORY_WORLDS.find(world => 
-        world.characters.some(char => char.id === character.id)
-      );
-      
-      const characterPack = {
-        id: character.id,
-        name: character.name,  // Put name at top level
-        title: `${character.name} Adventure`,
-        description: character.description,
-        difficulty: character.difficulty,
-        // Flatten character properties to top level
-        traits: character.traits,
-        worldview: character.worldview,
-        setting: world?.setting || 'Unknown Setting',
-        background: character.background,
-        speech_style: character.speech_style,
-        motivations: character.motivations,
-        relationships: character.relationships,
-        canonical_knowledge: character.canonical_knowledge,
-        // Metadata for additional info
-        metadata: {
-          author: world?.author || 'Unknown Author',
-          genre: world?.genre || 'Unknown Genre'
-        }
-      };
-      
-      console.log('🎭 Character pack created:', characterPack);
-      
-      await startAIStory(characterPack);
+      await startNewStory(character, 'ai_generated');
       navigation.navigate('Scene');
     } catch (error) {
-      console.error('Failed to start story:', error);
-      Alert.alert(
-        'Error', 
-        'Failed to generate your story. Please check your internet connection and try again.',
-        [{ text: 'OK' }]
-      );
+      console.error("Failed to start new story:", error);
     } finally {
-      setIsGeneratingStory(false);
-      setSelectedCharacter(null);
+      setIsLoading(false);
     }
   };
 
-  const handleLoadStory = async (storySession, storyData) => {
-    try {
-      setIsGeneratingStory(true);
-      
-      // Find the character pack for this story
-      const world = STORY_WORLDS.find(world => 
-        world.characters.some(char => char.name === storySession.character)
-      );
-      
-      if (!world) {
-        Alert.alert('Error', 'Could not find character information for this story');
-        return;
-      }
-      
-      const character = world.characters.find(char => char.name === storySession.character);
-      if (!character) {
-        Alert.alert('Error', 'Could not find character information for this story');
-        return;
-      }
-      
-      // Create character pack in the flat format expected by the AI service
-      const characterPack = {
-        id: character.id,
-        name: character.name,  // Put name at top level
-        title: storySession.title,
-        description: character.description,
-        difficulty: character.difficulty,
-        // Flatten character properties to top level
-        traits: character.traits,
-        worldview: character.worldview,
-        setting: world.setting,
-        background: character.background,
-        speech_style: character.speech_style,
-        motivations: character.motivations,
-        relationships: character.relationships,
-        canonical_knowledge: character.canonical_knowledge,
-        // Metadata for additional info
-        metadata: {
-          author: world.author,
-          genre: world.genre,
-          session_id: storySession.id
-        }
-      };
-      
-      // Load the story state using the existing context
-      await dispatch({
-        type: 'LOAD_STORY_SESSION',
-        payload: {
-          characterPack,
-          storyData,
-          sessionData: storySession
-        }
-      });
-      
-      // Navigate to the scene
-      navigation.navigate('Scene');
-      
-    } catch (error) {
-      console.error('Failed to load story:', error);
-      Alert.alert('Error', 'Failed to load the saved story');
-    } finally {
-      setIsGeneratingStory(false);
-    }
-  };
-
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case 'Easy': return ['#4CAF50', '#66BB6A'];
-      case 'Medium': return ['#FF9800', '#FFB74D'];
-      case 'Hard': return ['#F44336', '#EF5350'];
-      default: return ['#9E9E9E', '#BDBDBD'];
-    }
-  };
-
-  const getGenreIcon = (genre) => {
-    switch (genre) {
-      case 'Mystery': return '🔍';
-      case 'Gothic Horror': return '🧛';
-      case 'Romance': return '💕';
-      case 'Fantasy': return '✨';
-      case 'Drama': return '🎭';
-      case 'Tragedy': return '⚰️';
-      case 'Adventure': return '⚔️';
-      case 'Historical Drama': return '🏛️';
-      case 'Gothic Romance': return '🌹';
-      default: return '📖';
-    }
-  };
-
-  const getWorldGradient = (worldId) => {
-    switch (worldId) {
-      case 'sherlock_world': return ['#1a1a2e', '#16213e', '#0f3460'];
-      case 'dracula_world': return ['#1a0d0d', '#2d1b1b', '#4a2c2a'];
-      case 'pride_prejudice_world': return ['#1a1a2e', '#2d2a3e', '#3e3548'];
-      case 'alice_wonderland_world': return ['#1a2e1a', '#2e3e2e', '#3e4a3e'];
-      case 'gatsby_world': return ['#2e1a1a', '#3e2e1a', '#4a3e2a'];
-      case 'romeo_juliet_world': return ['#2e1a2e', '#3e2a3e', '#4a3548'];
-      case 'moby_dick_world': return ['#1a1a2e', '#1a2e3e', '#2a3e4a'];
-      case 'jane_eyre_world': return ['#2e1a1a', '#3e2a2a', '#4a3535'];
-      case 'tom_sawyer_world': return ['#2e2e1a', '#3e3e2a', '#4a4a35'];
-      case 'frankenstein_world': return ['#1a2e1a', '#2a3e2a', '#354a35'];
-      case 'monte_cristo_world': return ['#2e1a2e', '#3e2a3e', '#4a3548'];
-      case 'les_miserables_world': return ['#1a1a2e', '#2a2a3e', '#35354a'];
-      case 'wuthering_heights_world': return ['#2e1a1a', '#3e2a2a', '#4a3535'];
-      default: return ['#1a1a2e', '#16213e', '#0f3460'];
-    }
-  };
+  if (isLoading) {
+    return (
+      <LinearGradient colors={['#E94E66', '#A34ED1']} style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={styles.loadingText}>Crafting your world...</Text>
+      </LinearGradient>
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
-      
-      <LinearGradient
-        colors={['#1a1a2e', '#16213e', '#0f3460']}
-        style={styles.headerGradient}
-      >
-        <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerLeft}>
-              <Text style={styles.title}>✨ InCharacter</Text>
-              <Text style={styles.subtitle}>AI-Powered Literary Adventures</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.savedStoriesButton}
-              onPress={() => setShowSessionManager(true)}
-            >
-              <Text style={styles.savedStoriesIcon}>📚</Text>
-              <Text style={styles.savedStoriesText}>Saved Stories</Text>
+    <LinearGradient colors={['#E94E66', '#A34ED1']} style={styles.container}>
+      <Header onSettingsPress={() => setSettingsVisible(true)} />
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {selectedWorld ? (
+          <>
+            <TouchableOpacity onPress={() => setSelectedWorld(null)} style={styles.backButton}>
+              <Text style={styles.backButtonText}>← Back to Worlds</Text>
             </TouchableOpacity>
-          </View>
-          <View style={styles.headerDivider} />
-        </Animated.View>
-      </LinearGradient>
-
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <Animated.View style={[styles.storyGrid, { opacity: fadeAnim }]}>
-          {STORY_WORLDS.map((world, worldIndex) => (
-            <View key={world.id} style={styles.worldContainer}>
-              <LinearGradient
-                colors={getWorldGradient(world.id)}
-                style={styles.storyCard}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <View style={styles.storyHeader}>
-                  <View style={styles.storyTitleRow}>
-                    <Text style={styles.genreIcon}>{getGenreIcon(world.genre)}</Text>
-                    <Text style={styles.storyTitle}>{world.title}</Text>
-                  </View>
-                  <Text style={styles.storyDescription}>{world.description}</Text>
-                </View>
-                
-                <View style={styles.metadata}>
-                  <View style={styles.metadataRow}>
-                    <Text style={styles.metadataText}>📚 {world.author}</Text>
-                    <Text style={styles.metadataText}>🌍 {world.setting}</Text>
-                  </View>
-                  <View style={styles.metadataRow}>
-                    <Text style={styles.metadataText}>🎭 {world.genre}</Text>
-                    <Text style={styles.metadataText}>🤖 AI-Generated</Text>
-                  </View>
-                </View>
-
-                <Text style={styles.charactersHeader}>Choose Your Character:</Text>
-                <View style={styles.characterGrid}>
-                  {world.characters.map((character, charIndex) => (
-                    <TouchableOpacity
-                      key={character.id}
-                      style={styles.characterCard}
-                      onPress={() => handleCharacterSelect(character)}
-                      activeOpacity={0.7}
-                      disabled={isGeneratingStory}
-                    >
-                      <LinearGradient
-                        colors={['rgba(238, 226, 220, 0.1)', 'rgba(238, 226, 220, 0.05)']}
-                        style={styles.characterCardGradient}
-                      >
-                        <View style={styles.characterHeader}>
-                          <Text style={styles.characterName}>{character.name}</Text>
-                          <LinearGradient
-                            colors={getDifficultyColor(character.difficulty)}
-                            style={styles.difficultyBadge}
-                          >
-                            <Text style={styles.difficultyText}>{character.difficulty}</Text>
-                          </LinearGradient>
-                        </View>
-                        <Text style={styles.characterRole}>{character.role}</Text>
-                        <Text style={styles.characterDescription}>{character.description}</Text>
-                        
-                        <View style={styles.characterFooter}>
-                          <Text style={styles.playButton}>▶ Play as {character.name.split(' ')[0]}</Text>
-                        </View>
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </LinearGradient>
-            </View>
-          ))}
-        </Animated.View>
-
-        {state.currentStory && !isGeneratingStory && (
-          <Animated.View style={{ opacity: fadeAnim }}>
-            <LinearGradient
-              colors={['#e85a4f', '#d63384', '#6f42c1']}
-              style={styles.continueButton}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-            >
-              <TouchableOpacity
-                style={styles.continueButtonContent}
-                onPress={() => navigation.navigate('Scene')}
-              >
-                <Text style={styles.continueButtonText}>📖 Continue Current Story</Text>
-                <Text style={styles.continueSubtext}>
-                  Playing as {state.currentStory.character} • Persona: {state.personaScore}/100
-                </Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </Animated.View>
+            <Text style={styles.sectionTitle}>{selectedWorld.title}</Text>
+            {selectedWorld.characters.map(char => (
+              <CharacterCard key={char.id} character={char} onSelect={handleCharacterSelect} />
+            ))}
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>Choose a World</Text>
+            {STORY_WORLDS.map(world => (
+              <WorldCard key={world.id} world={world} onSelect={() => setSelectedWorld(world)} />
+            ))}
+          </>
         )}
-        
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Embark on literary journeys through classic worlds, where every choice shapes your character's destiny.
-          </Text>
-        </View>
       </ScrollView>
-
-      {/* Story Session Manager Modal */}
-      <StorySessionManager
-        visible={showSessionManager}
-        onClose={() => setShowSessionManager(false)}
-        onLoadStory={handleLoadStory}
-      />
-
-      {/* Enhanced Loading Overlay */}
-      {isGeneratingStory && (
-        <View style={styles.loadingOverlay}>
-          <LinearGradient
-            colors={['rgba(26, 26, 46, 0.95)', 'rgba(22, 33, 62, 0.95)']}
-            style={styles.loadingContainer}
-          >
-            <View style={styles.loadingContent}>
-              <ActivityIndicator size="large" color="#e85a4f" />
-              <Text style={styles.loadingTitle}>
-                ✨ Crafting Your Adventure
-              </Text>
-              <Text style={styles.loadingText}>
-                AI is weaving a unique tale for {selectedCharacter?.name}...
-              </Text>
-              <Text style={styles.loadingSubtext}>
-                Creating authentic dialogue, atmospheric scenes, and compelling choices
-              </Text>
-              
-              <View style={styles.loadingDots}>
-                <Text style={styles.loadingDot}>●</Text>
-                <Text style={styles.loadingDot}>●</Text>
-                <Text style={styles.loadingDot}>●</Text>
-              </View>
-            </View>
-          </LinearGradient>
-        </View>
-      )}
-    </View>
+      <SettingsScreen visible={isSettingsVisible} onClose={() => setSettingsVisible(false)} />
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1a2e',
-  },
-  headerGradient: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    alignItems: 'center',
-  },
-  header: {
-    alignItems: 'center',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  headerLeft: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#eee2dc',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#bab2b5',
-    fontStyle: 'italic',
-  },
-  headerDivider: {
-    width: '100%',
-    height: 2,
-    backgroundColor: '#e85a4f',
-    marginTop: 16,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  storyGrid: {
-    paddingHorizontal: 20,
-  },
-  worldContainer: {
-    marginBottom: 16,
-  },
-  storyCard: {
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: '#0f3460',
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
-    elevation: 8,
-  },
-  storyHeader: {
-    marginBottom: 16,
-  },
-  storyTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  genreIcon: {
-    fontSize: 20,
-    color: '#e85a4f',
-    marginRight: 8,
-  },
-  storyTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#eee2dc',
-    flex: 1,
-  },
-  storyDescription: {
-    fontSize: 14,
-    color: '#bab2b5',
-    lineHeight: 20,
-  },
-  metadata: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(238, 226, 220, 0.2)',
-    paddingTop: 12,
-  },
-  metadataRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  metadataText: {
-    fontSize: 12,
-    color: '#8b8680',
-  },
-  charactersHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#e85a4f',
-    marginBottom: 12,
-    marginTop: 16,
-  },
-  characterGrid: {
-    marginTop: 0,
-  },
-  characterCard: {
-    backgroundColor: '#16213e',
-    borderRadius: 15,
-    marginBottom: 20,
-    overflow: 'hidden',
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.2)',
-    elevation: 5,
-  },
-  characterCardGradient: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 12,
-  },
-  characterHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  characterName: {
-    fontSize: 16,
-    color: '#e85a4f',
-    fontWeight: '600',
-    flex: 1,
-    marginRight: 8,
-  },
-  difficultyBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  difficultyText: {
-    fontSize: 12,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  characterRole: {
-    fontSize: 14,
-    color: '#bab2b5',
-    fontStyle: 'italic',
-    marginBottom: 6,
-  },
-  characterDescription: {
-    fontSize: 14,
-    color: '#bab2b5',
-    lineHeight: 20,
-  },
-  characterFooter: {
-    marginTop: 12,
-    alignItems: 'flex-end',
-  },
-  playButton: {
-    fontSize: 14,
-    color: '#e85a4f',
-    fontWeight: 'bold',
-  },
-  continueButton: {
-    marginHorizontal: 20,
-    marginVertical: 20,
-    borderRadius: 12,
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
-    elevation: 8,
-  },
-  continueButtonContent: {
-    alignItems: 'center',
-    padding: 16,
-  },
-  continueButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  continueSubtext: {
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontSize: 14,
-    marginTop: 4,
-  },
-  footer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  footerText: {
-    color: '#bab2b5',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    fontStyle: 'italic',
-  },
-  loadingOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   loadingContainer: {
-    borderRadius: 12,
-    paddingHorizontal: 40,
-    paddingVertical: 30,
-    maxWidth: width * 0.8,
-    boxShadow: '0px 8px 16px rgba(0, 0, 0, 0.4)',
-    elevation: 16,
-  },
-  loadingContent: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingTitle: {
-    color: '#eee2dc',
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    marginTop: 16,
   },
   loadingText: {
-    color: '#bab2b5',
+    color: '#FFFFFF',
+    marginTop: 15,
     fontSize: 16,
-    marginBottom: 16,
-    textAlign: 'center',
   },
-  loadingSubtext: {
-    color: '#bab2b5',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  loadingDots: {
+  header: {
     flexDirection: 'row',
-    marginTop: 16,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: Platform.OS === 'android' ? 40 : 50,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
   },
-  loadingDot: {
-    fontSize: 12,
-    color: '#e85a4f',
-    marginHorizontal: 4,
+  headerIcon: {
+    padding: 5,
   },
-  savedStoriesButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  savedStoriesIcon: {
-    fontSize: 16,
-    color: '#e85a4f',
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
     fontWeight: 'bold',
   },
-  savedStoriesText: {
+  headerSubtitle: {
+    color: '#FFFFFF',
     fontSize: 14,
-    color: '#e85a4f',
+    opacity: 0.8,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  sectionTitle: {
+    color: '#FFFFFF',
+    fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 20,
   },
-  startButton: {
-    backgroundColor: '#e85a4f',
-    paddingVertical: 18,
-    paddingHorizontal: 40,
-    borderRadius: 25,
+  worldCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+  },
+  worldTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  worldDescription: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    opacity: 0.9,
+    marginBottom: 15,
+  },
+  worldFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 30,
-    boxShadow: '0px 8px 15px rgba(232, 90, 79, 0.3)',
-    elevation: 8,
-    transform: [{ scale: 1 }],
   },
-  loadButton: {
-    backgroundColor: '#5C4033',
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 20,
+  worldAuthor: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontStyle: 'italic',
+    opacity: 0.7,
+  },
+  characterCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    borderRadius: 15,
+    padding: 20,
+    marginBottom: 15,
+  },
+  characterName: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  characterDescription: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    opacity: 0.9,
+    marginBottom: 15,
+  },
+  characterFooter: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    marginTop: 20,
-    boxShadow: '0px 8px 15px rgba(92, 64, 51, 0.3)',
-    elevation: 8,
+    marginTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.2)',
+    paddingTop: 10,
   },
-  modalContent: {
-    backgroundColor: '#1a1a2e',
-    borderRadius: 20,
-    padding: 25,
-    margin: 20,
-    maxHeight: '80%',
-    boxShadow: '0px 16px 32px rgba(0, 0, 0, 0.4)',
-    elevation: 20,
+  selectText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginRight: 5,
+  },
+  backButton: {
+    marginBottom: 20,
+  },
+  backButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 

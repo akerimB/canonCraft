@@ -24,10 +24,10 @@ export default function App() {
             },
           }}
         >
-          <Stack.Screen 
-            name="Menu" 
-            component={MenuScreen}
-            options={{ title: 'InCharacter' }}
+                  <Stack.Screen 
+          name="Menu" 
+          component={MenuScreen} 
+          options={{ title: 'CanonCraft' }}
           />
           <Stack.Screen 
             name="Scene" 

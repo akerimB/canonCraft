@@ -15,7 +15,32 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  BackHandler,
 } from 'react-native';
+import { 
+  MessageCircle, 
+  Play, 
+  Brain, 
+  Eye, 
+  Sparkles, 
+  FileText, 
+  X, 
+  Zap, 
+  Crown,
+  Palette,
+  Loader,
+  CheckCircle,
+  AlertCircle,
+  Menu,
+  HelpCircle,
+  Settings,
+  ArrowRight,
+  Theater,
+  Lightbulb,
+  TestTube,
+  Wrench,
+  FlaskConical
+} from 'lucide-react-native';
 import { useGame } from './gameContext';
 import { 
   generateSceneImage, 
@@ -29,6 +54,13 @@ import {
 import FreedomSlider from './FreedomSlider';
 import PersonaMeter from './PersonaMeter';
 import TraitMatrixScreen from './TraitMatrixScreen';
+import PredictiveAIScreen from './PredictiveAIScreen';
+import ImmersiveMediaScreen from './ImmersiveMediaScreen';
+import CreatorToolsScreen from './CreatorToolsScreen';
+import AnimalCompanionsScreen from './AnimalCompanionsScreen';
+import InventoryScreen from './InventoryScreen';
+import NavigationSidebar from './NavigationSidebar';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -324,11 +356,11 @@ const InputAnalysisPanel = ({ inputText, analysisData }) => {
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'dialogue': return '💬';
-      case 'narration': return '🎭';
-      case 'other_character': return '👥';
-      case 'mixed': return '🎪';
-      default: return '📝';
+      case 'dialogue': return <MessageCircle size={16} color="#6B7280" />;
+      case 'narration': return <Theater size={16} color="#6B7280" />;
+      case 'other_character': return <Crown size={16} color="#6B7280" />;
+      case 'mixed': return <Sparkles size={16} color="#6B7280" />;
+      default: return <FileText size={16} color="#6B7280" />;
     }
   };
 
@@ -343,7 +375,7 @@ const InputAnalysisPanel = ({ inputText, analysisData }) => {
       <View style={styles.analysisHeader}>
         <Text style={styles.analysisTitle}>Input Analysis</Text>
         <View style={styles.typeIndicator}>
-          <Text style={styles.typeIcon}>{getTypeIcon(analysisData.inputType)}</Text>
+          <View style={styles.typeIcon}>{getTypeIcon(analysisData.inputType)}</View>
           <Text style={styles.typeText}>{analysisData.inputType.replace('_', ' ').toUpperCase()}</Text>
           <View style={[styles.confidenceBar, { backgroundColor: getConfidenceColor(analysisData.confidence) }]}>
             <Text style={styles.confidenceText}>{analysisData.confidence}%</Text>
@@ -416,12 +448,12 @@ const CharacterEmotionDisplay = ({ emotionData, characterId }) => {
 // NEW: Scene atmosphere controls
 const AtmosphereControls = ({ onAtmosphereChange, currentAtmosphere }) => {
   const atmosphereOptions = [
-    { id: 'auto', name: 'Auto', icon: '🎭', description: 'AI-determined mood' },
-    { id: 'mysterious', name: 'Mysterious', icon: '🌫️', description: 'Foggy, enigmatic' },
-    { id: 'dramatic', name: 'Dramatic', icon: '⚡', description: 'Intense, theatrical' },
-    { id: 'romantic', name: 'Romantic', icon: '🌹', description: 'Warm, intimate' },
-    { id: 'dark', name: 'Dark', icon: '🌙', description: 'Gothic, ominous' },
-    { id: 'bright', name: 'Bright', icon: '☀️', description: 'Light, optimistic' }
+    { id: 'auto', name: 'Auto', icon: Theater, description: 'AI-determined mood' },
+    { id: 'mysterious', name: 'Mysterious', icon: Eye, description: 'Foggy, enigmatic' },
+    { id: 'dramatic', name: 'Dramatic', icon: Zap, description: 'Intense, theatrical' },
+    { id: 'romantic', name: 'Romantic', icon: Sparkles, description: 'Warm, intimate' },
+    { id: 'dark', name: 'Dark', icon: Palette, description: 'Gothic, ominous' },
+    { id: 'bright', name: 'Bright', icon: Crown, description: 'Light, optimistic' }
   ];
 
   return (
@@ -437,7 +469,9 @@ const AtmosphereControls = ({ onAtmosphereChange, currentAtmosphere }) => {
             ]}
             onPress={() => onAtmosphereChange(option.id)}
           >
-            <Text style={styles.atmosphereIcon}>{option.icon}</Text>
+            <View style={styles.atmosphereIcon}>
+              <option.icon size={20} color={currentAtmosphere === option.id ? "#FFFFFF" : "#6B7280"} />
+            </View>
             <Text style={[
               styles.atmosphereName,
               currentAtmosphere === option.id && styles.atmosphereNameActive
@@ -484,16 +518,25 @@ export default function SceneScreen({ navigation }) {
   const [inputAnalysisData, setInputAnalysisData] = useState(null);
   const [characterEmotionData, setCharacterEmotionData] = useState(null);
   const [currentAtmosphere, setCurrentAtmosphere] = useState('auto');
-  const [showAdvancedFeatures, setShowAdvancedFeatures] = useState(false);
   const [realTimeAnalysis, setRealTimeAnalysis] = useState(true);
   
   // Phase 5: Trait Matrix Screen state
   const [showTraitMatrix, setShowTraitMatrix] = useState(false);
+  const [showPredictiveAI, setShowPredictiveAI] = useState(false);
+  const [showImmersiveMedia, setShowImmersiveMedia] = useState(false);
+  const [showCreatorTools, setShowCreatorTools] = useState(false);
+  const [showAnimalCompanions, setShowAnimalCompanions] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const pageFlipAnim = useRef(new Animated.Value(0)).current;
+
+  const [isAnimalCompanionsVisible, setAnimalCompanionsVisible] = useState(false);
+  const [isInventoryVisible, setInventoryVisible] = useState(false);
+  
+  const scrollViewRef = useRef();
 
   useEffect(() => {
     if (!state.currentStory || !state.currentScene) {
@@ -531,10 +574,11 @@ export default function SceneScreen({ navigation }) {
     
     setIsLoadingImage(true);
     try {
-      const imageUrl = await generateSceneImage(state.selectedCharacter, state.currentScene);
+      const imageUrl = await generateSceneImage(state.selectedCharacter, state.currentScene, 'illustration, minimalist, vector art');
       setSceneImage(imageUrl);
     } catch (error) {
       console.error('Error loading scene image:', error);
+      setSceneImage(null); // Set to null to show placeholder on error
     } finally {
       setIsLoadingImage(false);
     }
@@ -542,51 +586,17 @@ export default function SceneScreen({ navigation }) {
 
   const handlePlayerAction = async () => {
     if (!playerInput.trim()) {
-      Alert.alert('Input Required', 'Please enter your action or dialogue.');
+      Alert.alert('Input Required', 'Please describe what you do next.');
       return;
     }
-    
-    if (!canGenerateScene()) {
-      Alert.alert(
-        'No Energy',
-        'You need energy to continue your story. Watch an ad or upgrade to premium for unlimited energy.',
-        [
-          { text: 'Watch Ad', onPress: watchAdForEnergy },
-          { text: 'Upgrade', onPress: upgradeToPremium },
-          { text: 'Cancel', style: 'cancel' }
-        ]
-      );
-      return;
-    }
-    
     setIsLoading(true);
-    setShowChoices(false);
-    
     try {
-      // NEW: Enhanced input parsing and validation
-      const parseResult = parsePlayerInput(playerInput);
-      
-      if (!parseResult.isValid) {
-        Alert.alert('Input Issue', parseResult.error + '\n\n' + parseResult.suggestion);
-        setIsLoading(false);
-        return;
-      }
-
-      // Store analysis data for display
-      setInputAnalysisData(parseResult.promptData);
-      
-      // Generate character emotion data
-      const emotionData = generateCharacterEmotionData(
-        state.selectedCharacter,
-        state.currentScene,
-        parseResult.promptData
-      );
-      setCharacterEmotionData(emotionData);
-
-      await processPlayerAction(parseResult.promptData);
+      const customChoice = { text: playerInput, choice_id: 'custom' };
+      await generateNextScene(customChoice, 50); // Using a default freedom level
+      setPlayerInput('');
     } catch (error) {
-      console.error('Error processing player action:', error);
-      Alert.alert('Error', 'Failed to process your action. Please try again.');
+      console.error('Error generating next scene:', error);
+      Alert.alert('Error', 'Failed to generate the next scene. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -735,14 +745,23 @@ export default function SceneScreen({ navigation }) {
     const parsing = parsePlayerInput(input);
     if (!parsing.isValid) return '❌ Invalid';
     
-    const icons = {
-      'dialogue': '💬 Speech',
-      'narration': '🎭 Action', 
-      'other_character': '👥 Others',
-      'mixed': '🎪 Complex'
+    const typeConfig = {
+      'dialogue': { icon: MessageCircle, label: 'Speech' },
+      'action': { icon: Play, label: 'Action' }, 
+      'internal': { icon: Brain, label: 'Thought' },
+      'observation': { icon: Eye, label: 'Observe' },
+      'mixed': { icon: Sparkles, label: 'Complex' }
     };
     
-    return icons[parsing.promptData.inputType] || '📝 General';
+    const config = typeConfig[parsing.promptData?.type] || { icon: FileText, label: 'General' };
+    const IconComponent = config.icon;
+    
+    return (
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <IconComponent size={16} color="#8b9dc3" style={{ marginRight: 4 }} />
+        <Text style={{ color: '#8b9dc3', fontSize: 12 }}>{config.label}</Text>
+      </View>
+    );
   };
     
   const getInputQualityTips = (input) => {
@@ -751,16 +770,29 @@ export default function SceneScreen({ navigation }) {
     const parsing = parsePlayerInput(input);
     const tips = [];
     
-    if (parsing.isValid && parsing.promptData.suggestions.length > 0) {
-      tips.push(...parsing.promptData.suggestions);
+    // Generate tips based on the analysis data
+    if (parsing.isValid && parsing.promptData) {
+      const { confidence, type, hasMotivation, isDetailed, emotionalWords } = parsing.promptData;
+      
+      if (confidence < 0.6) {
+        tips.push('Try being more specific about your action');
+      }
+      
+      if (!hasMotivation && type === 'action') {
+        tips.push('Consider adding "because" or "since" to explain motivation');
+      }
+      
+      if (emotionalWords === 0 && input.length > 30) {
+        tips.push('Add emotional depth to your character\'s actions');
+      }
+      
+      if (!isDetailed && input.length < 50) {
+        tips.push('Provide more detail about what your character does');
+      }
     }
     
     if (input.length > PLAYER_INPUT_LIMITS.RECOMMENDED_LENGTH) {
       tips.push('Consider shortening for better AI understanding');
-    }
-    
-    if (parsing.isValid && parsing.promptData.confidence < 60) {
-      tips.push('Try being more specific about your action');
     }
     
     return tips.slice(0, 2); // Limit to 2 tips to avoid clutter
@@ -814,12 +846,23 @@ export default function SceneScreen({ navigation }) {
     );
   };
 
+  const handleExit = () => {
+    Alert.alert(
+      "Exit Game",
+      "Are you sure you want to exit to the main menu?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Yes, Exit", onPress: () => navigation.navigate('Menu') }
+      ]
+    );
+  };
+
   if (!state.currentScene) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#8B4513" />
-        <Text style={styles.loadingText}>Opening the ancient tome...</Text>
-      </View>
+      <LinearGradient colors={['#E94E66', '#A34ED1']} style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#FFFFFF" />
+        <Text style={styles.loadingText}>Loading Your Story...</Text>
+      </LinearGradient>
     );
   }
 
@@ -827,425 +870,186 @@ export default function SceneScreen({ navigation }) {
   const isGenerating = state.isGeneratingScene || isLoading;
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <StatusBar barStyle="dark-content" backgroundColor="#2C1810" />
-      
-      {/* TEMPORARILY DISABLED: Energy Status Bar */}
-      {false && (
-      <View style={styles.energyBar}>
-        {state.premiumUser ? (
-          <View style={styles.premiumStatus}>
-            <Text style={styles.premiumText}>👑 PREMIUM</Text>
-            <Text style={styles.premiumSubtext}>Unlimited Energy</Text>
-          </View>
-        ) : (
-          <View style={styles.energyStatus}>
-            <Text style={styles.energyText}>⚡ Energy: {state.energy}/{state.maxEnergy}</Text>
-            {state.energy === 0 && (
-              <TouchableOpacity 
-                style={styles.energyButton}
-                onPress={() => {
-                  const timeLeft = getTimeUntilNextEnergyRefill();
-                  Alert.alert(
-                    'Energy Options',
-                    `Next refill in ${timeLeft.hours}h ${timeLeft.minutes}m`,
-                    [
-                      { text: 'Watch Ad (+2)', onPress: () => watchAdForEnergy() },
-                      { text: 'Go Premium', onPress: () => upgradeToPremium() },
-                      { text: 'Wait', style: 'cancel' }
-                    ]
-                  );
-                }}
-              >
-                <Text style={styles.energyButtonText}>Get More</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
-      </View>
-      )}
-      
-      {/* Persona Meter */}
-      <PersonaMeter score={state.personaScore} />
-      
-      {/* Simple Dark Background */}
-      <View style={styles.atmosphericBackground}>
-        {/* Character/Scene Atmospheric Overlay */}
-        <View style={[styles.atmosphericOverlay, { backgroundColor: getAtmosphericOverlay() }]}>
-        <View style={styles.bookContainer}>
-          <Animated.View 
-            style={[
-              styles.openBook,
-              {
-                opacity: fadeAnim,
-                transform: [
-                  { scale: scaleAnim },
-                  {
-                    rotateY: pageFlipAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0deg', '5deg']
-                    })
-                  }
-                ]
-              }
-            ]}
-          >
-            {/* Book Spine */}
-            <View style={styles.bookSpine} />
-            
-            <View style={styles.bookPages}>
-                {/* Left Page - AI Generated Image Section */}
-                <ImageBackground
-                  source={VINTAGE_BOOK_LEFT}
-                  style={styles.leftPage}
-                  imageStyle={styles.pageBackgroundImage}
-                >
-                  <View style={styles.imagePageContent}>
-                    {/* Scene Title at Top */}
-                    <View style={styles.imageSectionTitle}>
-                      <Text style={styles.sceneTitle}>{scene.title}</Text>
-                  </View>
-
-                    {/* Main Scene Image - Larger and More Prominent */}
-                    <View style={styles.mainSceneImageContainer}>
-                    {isLoadingImage ? (
-                      <View style={styles.imageLoading}>
-                          <ActivityIndicator size="large" color="#8B4513" />
-                        <Text style={styles.imageLoadingText}>Conjuring scene...</Text>
-                      </View>
-                    ) : sceneImage ? (
-                      <Image 
-                        source={{ uri: sceneImage }} 
-                          style={styles.mainSceneImage}
-                        resizeMode="cover"
-                      />
-                    ) : (
-                      <View style={styles.imagePlaceholder}>
-                          <Text style={styles.imagePlaceholderText}>🎨</Text>
-                          <Text style={styles.placeholderSubtext}>AI Generated Scene</Text>
-                      </View>
-                    )}
-                  </View>
-                  
-                    {/* Character Info at Bottom */}
-                    <View style={styles.characterInfoSection}>
-                      <CharacterPortrait
-                        characterId={state.selectedCharacter?.id}
-                        visible={!isGenerating}
-                        style={styles.compactPortrait}
-                        emotionData={characterEmotionData}
-                      />
-                      <View style={styles.characterDetails}>
-                        <Text style={styles.characterName}>
-                          {state.selectedCharacter?.name || 'Unknown Character'}
-                        </Text>
-                        <Text style={styles.chapterText}>
-                          Chapter {state.totalChoicesMade + 1}
-                        </Text>
-                        
-                        {/* Current Emotion Display */}
-                        {characterEmotionData && characterEmotionData.emotions && (
-                          <View style={styles.currentEmotionDisplay}>
-                            <Text style={styles.emotionBadgeText}>
-                              {getEmotionEmoji(characterEmotionData.emotions[0])} {characterEmotionData.emotions[0]}
-                            </Text>
-                  </View>
-                        )}
-                </View>
-              </View>
-                  </View>
-                </ImageBackground>
-
-                {/* Right Page - Story Text Section */}
-                <ImageBackground
-                  source={VINTAGE_BOOK_RIGHT}
-                  style={styles.rightPage}
-                  imageStyle={styles.pageBackgroundImage}
-                >
-                <ScrollView 
-                  style={styles.rightPageScroll}
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={styles.rightPageContent}
-                >
-                  {/* Story Text */}
-                  <TypewriterText
-                    text={scene.narration}
-                    speed={30}
-                    onComplete={() => {}}
-                    style={styles.storyText}
-                    disabled={isGenerating}
-                  />
-
-                  {/* Loading State for AI Generation */}
-                  {isGenerating && (
-                    <View style={styles.generatingContainer}>
-                      <ActivityIndicator size="small" color="#8B4513" />
-                      <Text style={styles.generatingText}>
-                        The story weaves onward...
-                      </Text>
-                    </View>
-                  )}
-
-                  {/* Player Input Section */}
-                  {!isGenerating && showChoices && (
-                    <Animated.View 
-                      style={[
-                        styles.inputContainer,
-                        {
-                          opacity: showChoices ? 1 : 0,
-                          transform: [{ translateY: showChoices ? 0 : 20 }]
-                        }
-                      ]}
-                    >
-                      <Text style={styles.inputHeader}>What do you do?</Text>
-                      <Text style={styles.inputSubtext}>Write your action or decision as {state.currentStory?.character}:</Text>
-                      
-                      <TextInput
-                        style={styles.textInput}
-                        placeholder={`I decide to...`}
-                        placeholderTextColor="#A0826D"
-                        value={playerInput}
-                          onChangeText={handleInputChange}
-                        multiline
-                        numberOfLines={3}
-                        textAlignVertical="top"
-                          maxLength={PLAYER_INPUT_LIMITS.MAX_LENGTH}
-                        />
-                        
-                        {/* Character Count and Input Type Display */}
-                        <View style={styles.inputMetadata}>
-                          <Text style={[
-                            styles.characterCount,
-                            playerInput.length > PLAYER_INPUT_LIMITS.WARNING_LENGTH && styles.characterCountWarning,
-                            playerInput.length >= PLAYER_INPUT_LIMITS.MAX_LENGTH && styles.characterCountDanger
-                          ]}>
-                            {playerInput.length}/{PLAYER_INPUT_LIMITS.MAX_LENGTH}
-                          </Text>
-                          
-                          {playerInput.trim().length >= PLAYER_INPUT_LIMITS.MIN_LENGTH && (
-                            <Text style={styles.inputTypeIndicator}>
-                              {getInputTypeDisplay(playerInput)}
-                            </Text>
-                          )}
-                        </View>
-                        
-                        {/* Input Quality Tips */}
-                        {playerInput.trim().length > 0 && (
-                          <View style={styles.inputTips}>
-                            {getInputQualityTips(playerInput).map((tip, index) => (
-                              <Text key={index} style={styles.inputTip}>💡 {tip}</Text>
-                            ))}
-                          </View>
-                        )}
-
-                        {/* NEW: Advanced Features Toggle */}
-                        <TouchableOpacity
-                          style={styles.advancedToggle}
-                          onPress={() => setShowAdvancedFeatures(!showAdvancedFeatures)}
-                        >
-                          <Text style={styles.advancedToggleText}>
-                            {showAdvancedFeatures ? '🔽' : '▶️'} Advanced AI Features
-                          </Text>
-                        </TouchableOpacity>
-
-                        {/* NEW: Enhanced AI Features */}
-                        {showAdvancedFeatures && (
-                          <View style={styles.advancedFeaturesContainer}>
-                            {/* Real-time Input Analysis */}
-                            <InputAnalysisPanel 
-                              inputText={playerInput}
-                              analysisData={inputAnalysisData}
-                            />
-                            
-                            {/* Character Emotion Display */}
-                            {characterEmotionData && (
-                              <CharacterEmotionDisplay 
-                                emotionData={characterEmotionData}
-                                characterId={state.selectedCharacter?.id}
-                              />
-                            )}
-                            
-                            {/* Scene Atmosphere Controls */}
-                            <AtmosphereControls 
-                              onAtmosphereChange={handleAtmosphereChange}
-                              currentAtmosphere={currentAtmosphere}
-                            />
-                            
-                            {/* Real-time Analysis Toggle */}
-                            <View style={styles.featureToggle}>
-                              <TouchableOpacity
-                                style={[styles.toggleButton, realTimeAnalysis && styles.toggleButtonActive]}
-                                onPress={() => setRealTimeAnalysis(!realTimeAnalysis)}
-                              >
-                                <Text style={[styles.toggleText, realTimeAnalysis && styles.toggleTextActive]}>
-                                  {realTimeAnalysis ? '✅' : '⬜'} Real-time Analysis
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                            
-                            {/* API Test Button */}
-                            <View style={styles.featureToggle}>
-                              <TouchableOpacity
-                                style={styles.toggleButton}
-                                onPress={handleTestAPI}
-                              >
-                                <Text style={styles.toggleText}>
-                                  🔧 Test OpenAI Connection
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                            
-                            {/* Suggestions Format Test Button */}
-                            <View style={styles.featureToggle}>
-                              <TouchableOpacity
-                                style={styles.toggleButton}
-                                onPress={handleTestSuggestions}
-                              >
-                                <Text style={styles.toggleText}>
-                                  🧪 Test Suggestions Format
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                            
-                            {/* Persona Meter Test Button */}
-                            <View style={styles.featureToggle}>
-                              <TouchableOpacity
-                                style={styles.toggleButton}
-                                onPress={handleTestPersona}
-                              >
-                                <Text style={styles.toggleText}>
-                                  🎭 Test Persona Meter
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                            
-                            {/* Phase 5: Trait Matrix Button */}
-                            {state.traitMatrixInitialized && (
-                              <View style={styles.featureToggle}>
-                                <TouchableOpacity
-                                  style={[styles.toggleButton, styles.traitMatrixButton]}
-                                  onPress={() => setShowTraitMatrix(true)}
-                                >
-                                  <Text style={[styles.toggleText, styles.traitMatrixButtonText]}>
-                                    🧠 Character Trait Matrix
-                                  </Text>
-                                </TouchableOpacity>
-                              </View>
-                            )}
-                          </View>
-                        )}
-                      
-                      <View style={styles.actionButtons}>
-                        <TouchableOpacity 
-                          style={styles.helpButton}
-                          onPress={handleGetAISuggestions}
-                          disabled={isLoadingSuggestions}
-                        >
-                          {isLoadingSuggestions ? (
-                            <ActivityIndicator size="small" color="#8B4513" />
-                          ) : (
-                            <>
-                              <Text style={styles.helpButtonText}>💭 Get AI Help</Text>
-                            </>
-                          )}
-                        </TouchableOpacity>
-
-                        <TouchableOpacity 
-                          style={styles.settingsButton}
-                          onPress={() => setShowFreedomSlider(!showFreedomSlider)}
-                        >
-                          <Text style={styles.settingsButtonText}>⚙️ Story Freedom</Text>
-                        </TouchableOpacity>
-                        
-                        <TouchableOpacity 
-                          style={[
-                            styles.actionButton,
-                            (!playerInput.trim() || isGenerating) && styles.actionButtonDisabled
-                          ]}
-                          onPress={handlePlayerAction}
-                          disabled={!playerInput.trim() || isGenerating}
-                        >
-                          <Text style={[
-                            styles.actionButtonText,
-                            (!playerInput.trim() || isGenerating) && styles.actionButtonTextDisabled
-                          ]}>
-                            ➤ Continue Story
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* Freedom Slider */}
-                      {showFreedomSlider && (
-                        <FreedomSlider
-                          value={freedomLevel}
-                          onValueChange={setFreedomLevel}
-                          disabled={isGenerating}
-                        />
-                      )}
-
-                      {/* AI Suggestions */}
-                      {showSuggestions && suggestedChoices.length > 0 && (
-                        <View style={styles.suggestionsContainer}>
-                          <Text style={styles.suggestionsHeader}>AI Suggestions:</Text>
-                          {suggestedChoices.map((suggestion, index) => (
-                            <TouchableOpacity
-                              key={index}
-                              style={styles.suggestionButton}
-                              onPress={() => handleSelectSuggestion(suggestion)}
-                            >
-                              <Text style={styles.suggestionText}>{suggestion}</Text>
-                            </TouchableOpacity>
-                          ))}
-                          <TouchableOpacity
-                            style={styles.closeSuggestions}
-                            onPress={() => setShowSuggestions(false)}
-                          >
-                            <Text style={styles.closeSuggestionsText}>✕ Close suggestions</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                    </Animated.View>
-                  )}
-                </ScrollView>
-                </ImageBackground>
+    <LinearGradient colors={['#E94E66', '#A34ED1']} style={styles.container}>
+      <StatusBar barStyle="light-content" />
+      <PersonaMeter 
+        score={state.personaScore} 
+        avatarUri={state.selectedCharacter?.portrait} 
+      />
+      <View style={styles.mainContent}>
+        <ScrollView contentContainerStyle={styles.centerContent}>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>SCENE VISUAL</Text>
+            <View style={styles.imageContainer}>
+              {isLoadingImage ? (
+                <ActivityIndicator size="large" color="#E94E66" />
+              ) : sceneImage ? (
+                <Image source={{ uri: sceneImage }} style={styles.sceneImage} resizeMode="cover" />
+              ) : (
+                <View style={styles.imagePlaceholder}><Text>🎨</Text></View>
+              )}
             </View>
-          </Animated.View>
-        </View>
-        </View>
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>SCENE TEXT</Text>
+            <ScrollView style={styles.narrativeScrollView}>
+                <Text style={styles.narrativeText}>{scene.narration}</Text>
+            </ScrollView>
+            <TextInput
+              style={styles.textInput}
+              placeholder="What do you do next?"
+              placeholderTextColor="rgba(255, 255, 255, 0.5)"
+              value={playerInput}
+              onChangeText={setPlayerInput}
+              editable={!isGenerating}
+            />
+            <TouchableOpacity
+              style={[styles.continueButton, (isGenerating || !playerInput.trim()) && styles.disabledButton]}
+              onPress={handlePlayerAction}
+              disabled={isGenerating || !playerInput.trim()}
+            >
+              {isGenerating ? (
+                <ActivityIndicator color="#E94E66" />
+              ) : (
+                <>
+                  <Text style={styles.continueButtonText}>CONTINUE</Text>
+                  <ArrowRight size={18} color="#E94E66" />
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+        
+        <NavigationSidebar
+          onNavigate={navigation.navigate}
+          onShowPersona={() => setShowTraitMatrix(true)}
+          onShowMetrics={() => setShowCreatorTools(true)}
+          onExit={handleExit}
+        />
       </View>
-      
-      {/* Phase 5: Trait Matrix Screen */}
+
       <TraitMatrixScreen
         visible={showTraitMatrix}
         onClose={() => setShowTraitMatrix(false)}
         storyId={state.currentStory?.id}
         characterName={state.selectedCharacter?.name}
       />
-    </KeyboardAvoidingView>
+      <CreatorToolsScreen
+        visible={showCreatorTools}
+        onClose={() => setShowCreatorTools(false)}
+      />
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2C1810',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#2C1810',
   },
   loadingText: {
-    color: '#D4AF37',
-    fontSize: 18,
-    marginTop: 16,
-    textAlign: 'center',
-    fontFamily: 'serif',
-    fontStyle: 'italic',
+    color: '#FFFFFF',
+    marginTop: 15,
+    fontSize: 16,
+  },
+  mainContent: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  centerContent: {
+    flexGrow: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    gap: 20,
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 15,
+    padding: 20,
+    width: 380,
+    height: 500,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 15,
+    textTransform: 'uppercase',
+    opacity: 0.8,
+  },
+  imageContainer: {
+    flex: 1,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  sceneImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    fontSize: 50,
+  },
+  narrativeScrollView: {
+    flex: 1,
+    marginBottom: 15,
+  },
+  narrativeText: {
+    fontSize: 17,
+    color: '#FFFFFF',
+    lineHeight: 26,
+  },
+  textInput: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderRadius: 10,
+    padding: 15,
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 15,
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  continueButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    paddingVertical: 15,
+    backgroundColor: '#4A90E2',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    flex: 1,
+  },
+  disabledButton: {
+    backgroundColor: '#A9A9A9',
+  },
+  continueButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  pageCounter: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    minWidth: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pageCounterText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#555',
   },
   atmosphericBackground: {
     flex: 1,
@@ -1317,395 +1121,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
     elevation: 5,
-  },
-  mainSceneImage: {
-    width: '100%',
-    height: '100%',
-  },
-  imageLoading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#EAE0D2',
-  },
-  imageLoadingText: {
-    color: '#8B4513',
-    fontSize: 14,
-    marginTop: 10,
-    fontStyle: 'italic',
-    fontFamily: 'serif',
-  },
-  imagePlaceholder: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#EAE0D2',
-  },
-  imagePlaceholderText: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  placeholderSubtext: {
-    fontSize: 14,
-    color: '#8B4513',
-    fontStyle: 'italic',
-    fontFamily: 'serif',
-  },
-  characterInfoSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  compactPortrait: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginRight: 10,
-  },
-  characterDetails: {
-    flexDirection: 'column',
-  },
-  characterName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#2C1810',
-    textAlign: 'center',
-    fontFamily: 'serif',
-  },
-  chapterText: {
-    fontSize: 12,
-    color: '#A0826D',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-  storyText: {
-    fontSize: 16,
-    lineHeight: 26,
-    color: '#2C1810',
-    textAlign: 'justify',
-    fontFamily: 'serif',
-    letterSpacing: 0.3,
-    marginBottom: 25,
-  },
-  generatingContainer: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  generatingText: {
-    color: '#8B4513',
-    fontSize: 14,
-    marginTop: 10,
-    textAlign: 'center',
-    fontStyle: 'italic',
-    fontFamily: 'serif',
-  },
-  inputContainer: {
-    marginTop: 20,
-  },
-  inputHeader: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#2C1810',
-    marginBottom: 8,
-    textAlign: 'center',
-    fontFamily: 'serif',
-    letterSpacing: 0.5,
-  },
-  inputSubtext: {
-    fontSize: 14,
-    color: '#8B4513',
-    textAlign: 'center',
-    fontStyle: 'italic',
-    marginBottom: 15,
-    fontFamily: 'serif',
-  },
-  textInput: {
-    backgroundColor: 'rgba(245, 241, 232, 0.95)',
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-    borderRadius: 12,
-    padding: 15,
-    fontSize: 16,
-    color: '#2C1810',
-    fontFamily: 'serif',
-    lineHeight: 22,
-    minHeight: 80,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  helpButton: {
-    flex: 1,
-    backgroundColor: '#5C4033',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    minWidth: 100,
-  },
-  helpButtonText: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  settingsButton: {
-    flex: 1,
-    backgroundColor: '#5C4033',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    minWidth: 120,
-  },
-  settingsButtonText: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  actionButton: {
-    backgroundColor: '#e85a4f',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginVertical: 8,
-    alignItems: 'center',
-    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-    elevation: 3,
-  },
-  actionButtonDisabled: {
-    backgroundColor: '#A0826D',
-    opacity: 0.6,
-  },
-  actionButtonText: {
-    color: '#F5F1E8',
-    fontSize: 16,
-    fontWeight: 'bold',
-    fontFamily: 'serif',
-  },
-  actionButtonTextDisabled: {
-    color: '#E6D7C3',
-  },
-  suggestionsContainer: {
-    backgroundColor: 'rgba(234, 224, 210, 0.95)',
-    borderRadius: 12,
-    padding: 15,
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#D4AF37',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  suggestionsHeader: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#8B4513',
-    marginBottom: 10,
-    textAlign: 'center',
-    fontFamily: 'serif',
-  },
-  suggestionButton: {
-    backgroundColor: 'rgba(245, 241, 232, 0.95)',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#D4AF37',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  suggestionText: {
-    color: '#2C1810',
-    fontSize: 14,
-    fontFamily: 'serif',
-    lineHeight: 20,
-  },
-  closeSuggestions: {
-    alignSelf: 'center',
-    marginTop: 5,
-  },
-  closeSuggestionsText: {
-    color: '#8B4513',
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  portraitContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  portraitFrame: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-    borderRadius: 50,
-  },
-  emotionIndicator: {
-    position: 'absolute',
-    bottom: -5,
-    right: -5,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 15,
-    width: 30,
-    height: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  emotionEmoji: {
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  characterPortrait: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 50,
-  },
-  narrativeText: {
-    fontSize: 16,
-    lineHeight: 26,
-    color: '#2C1810',
-    textAlign: 'justify',
-    fontFamily: 'serif',
-    letterSpacing: 0.3,
-  },
-  cursor: {
-    color: '#8B4513',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  skipHint: {
-    color: '#8B4513',
-    fontSize: 12,
-    fontStyle: 'italic',
-    marginTop: 5,
-  },
-  energyBar: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 50,
-    backgroundColor: '#2C1810',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  premiumStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-  },
-  premiumText: {
-    color: '#D4AF37',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  premiumSubtext: {
-    color: '#D4AF37',
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  energyStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 10,
-  },
-  energyText: {
-    color: '#D4AF37',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  energyButton: {
-    backgroundColor: '#e85a4f',
-    padding: 10,
-    borderRadius: 8,
-    marginLeft: 10,
-  },
-  energyButtonText: {
-    color: '#F5F1E8',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  atmosphericOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sceneTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2C1810',
-    textAlign: 'center',
-    fontFamily: 'serif',
-    letterSpacing: 1,
-  },
-  rightPageScroll: {
-    flex: 1,
-  },
-  rightPageContent: {
-    padding: 25,
-    paddingTop: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  inputMetadata: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  characterCount: {
-    color: '#2C1810',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  characterCountWarning: {
-    color: '#8B4513',
-  },
-  characterCountDanger: {
-    color: '#e85a4f',
-  },
-  inputTypeIndicator: {
-    color: '#2C1810',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  inputTips: {
-    marginTop: 10,
-  },
-  inputTip: {
-    color: '#2C1810',
-    fontSize: 14,
-    marginBottom: 5,
   },
   inputAnalysisPanel: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1870,26 +1285,6 @@ const styles = StyleSheet.create({
   atmosphereNameActive: {
     fontWeight: 'bold',
   },
-  advancedToggle: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  advancedToggleText: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  advancedFeaturesContainer: {
-    marginTop: 10,
-  },
-  featureToggle: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
   toggleButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     borderRadius: 8,
@@ -1920,15 +1315,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
     textAlign: 'center',
-  },
-  // Phase 5: Trait Matrix Button Styles
-  traitMatrixButton: {
-    backgroundColor: 'rgba(74, 144, 226, 0.2)',
-    borderWidth: 2,
-    borderColor: '#4a90e2',
-  },
-  traitMatrixButtonText: {
-    color: '#4a90e2',
-    fontWeight: 'bold',
   },
 }); 

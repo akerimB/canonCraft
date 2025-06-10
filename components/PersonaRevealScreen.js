@@ -15,6 +15,7 @@ import {
   Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { X } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -274,7 +275,7 @@ const PersonaRevealScreen = ({
                 style={styles.closeButton}
                 onPress={onClose}
               >
-                <Text style={styles.closeButtonText}>✕</Text>
+                <X size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 

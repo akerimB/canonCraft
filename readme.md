@@ -1,4 +1,4 @@
-# InCharacter - AI-Powered Literary Interactive Fiction
+# CanonCraft - AI-Powered Literary Interactive Fiction
 
 **Target Platforms:** iOS & Android  
 **Tech Stack:** React Native (Expo) · AI Scene Generation · SQLite Database · Beautiful Open Book UI
@@ -9,7 +9,7 @@
 
 ## 🎭 Revolutionary Interactive Storytelling
 
-InCharacter transforms interactive fiction by letting players **write their own actions** instead of selecting from pre-defined choices. Our **Phase 2 Core Intelligence Systems** ensure every story remembers everything, creating unprecedented narrative continuity where characters never forget major events, relationships evolve naturally, and consequences persist forever.
+CanonCraft transforms interactive fiction by letting players **write their own actions** instead of selecting from pre-defined choices. Our **Phase 2 Core Intelligence Systems** ensure every story remembers everything, creating unprecedented narrative continuity where characters never forget major events, relationships evolve naturally, and consequences persist forever.
 
 ### **Core Innovation: Intelligent Freeform Agency**
 - **Write Your Own Decisions**: Type any action as your character ("I examine the room for clues", "I speak with sharp wit", etc.)

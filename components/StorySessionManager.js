@@ -16,6 +16,7 @@ import {
   ActivityIndicator,
   Dimensions
 } from 'react-native';
+import { X } from 'lucide-react-native';
 import { databaseMemory } from '../services/databaseMemorySystem';
 import { useGame } from './gameContext';
 
@@ -234,7 +235,7 @@ export default function StorySessionManager({ visible, onClose, onLoadStory }) {
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Saved Stories</Text>
             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>✕</Text>
+              <X size={24} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 

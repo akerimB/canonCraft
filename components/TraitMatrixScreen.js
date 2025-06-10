@@ -15,6 +15,7 @@ import {
   Modal
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { X } from 'lucide-react-native';
 import { characterTraitMatrix, TRAIT_METADATA } from '../services/characterTraitMatrix.js';
 import { enhancedPersonaScoring } from '../services/enhancedPersonaScoring.js';
 
@@ -428,7 +429,7 @@ export default function TraitMatrixScreen({ visible, onClose, storyId, character
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Character Trait Matrix</Text>
               <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                <Text style={styles.closeButtonText}>✕</Text>
+                <X size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
 

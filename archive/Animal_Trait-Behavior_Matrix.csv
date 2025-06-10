@@ -1,0 +1,11 @@
+Category,Subcategory,Trait/Behavior,Description,Valence,Cognitive Involvement,Social Impact,Conscious/Subconscious
+Behavior,Adaptive,Grooming,Self or social cleaning through licking or nibbling,Positive,Low,Medium,Subconscious
+Behavior,Maladaptive,Stereotypy,"Repetitive, purposeless behavior often seen in confinement",Negative,Low,Low,Subconscious
+Emotion,Basic Emotion,Fear,Response to threat or danger,Negative,Medium,High,Both
+Emotion,Basic Emotion,Playfulness,"Engagement in fun, non-goal-directed behavior",Positive,Medium,High,Conscious
+Social Behavior,Cooperative,Pack Hunting,Coordinated effort to hunt prey,Positive,High,High,Both
+Social Emotion,Attachment,Maternal Bonding,Care and protection for offspring,Positive,Medium,High,Both
+Personality Trait,Temperament,Boldness,Willingness to explore or approach unfamiliar stimuli,Neutral,Medium,Medium,Subconscious
+Personality Trait,Temperament,Aggression,Inclination toward conflict or dominance,Negative,Medium,High,Subconscious
+Subconscious,Instinct,Nest Building,Instinctive construction behavior,Neutral,Low,Medium,Subconscious
+Subconscious,Reflex,Startle Response,Sudden reaction to unexpected stimuli,Neutral,Low,Low,Subconscious

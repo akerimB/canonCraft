@@ -931,6 +931,22 @@ Provide player-friendly insights in JSON format:
       evolutionTrend: this.analyzeEvolutionPattern()
     };
   }
+
+  /**
+   * Generate reveal schedule for enhanced scoring
+   */
+  generateRevealSchedule() {
+    return [
+      { decision: 5, type: 'basic', focus: 'initial_assessment' },
+      { decision: 10, type: 'enhanced', focus: 'trait_matrix_evolution' },
+      { decision: 15, type: 'basic', focus: 'consistency_check' },
+      { decision: 20, type: 'comprehensive', focus: 'psychological_depth' },
+      { decision: 25, type: 'basic', focus: 'growth_patterns' },
+      { decision: 30, type: 'enhanced', focus: 'conscious_subconscious_balance' },
+      { decision: 35, type: 'basic', focus: 'refinement_suggestions' },
+      { decision: 40, type: 'comprehensive', focus: 'mastery_assessment' }
+    ];
+  }
 }
 
 // Export singleton instance

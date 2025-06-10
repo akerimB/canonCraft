@@ -35,6 +35,82 @@ class DatabaseMemorySystem {
   }
 
   /**
+   * Create a new story session (compatibility method)
+   */
+  async createStorySession(characterPack) {
+    const result = await this.initializeStory(characterPack);
+    return result.sessionId;
+  }
+
+  /**
+   * Store character profile (compatibility method)
+   */
+  async storeCharacterProfile(sessionId, characterData) {
+    try {
+      await database.createCharacter(sessionId, {
+        name: characterData.name || 'Player',
+        character_type: 'player',
+        current_state: 'alive',
+        character_data: JSON.stringify(characterData)
+      });
+      console.log('✅ Character profile stored');
+      return true;
+    } catch (error) {
+      console.error('❌ Failed to store character profile:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get recent memory (compatibility method)
+   */
+  async getRecentMemory(characterId, limit = 10) {
+    try {
+      if (!this.currentSessionId) {
+        console.warn('No active session for memory retrieval');
+        return [];
+      }
+      
+      const events = await database.getRecentEvents(this.currentSessionId, limit);
+      return events.map(event => ({
+        type: event.type,
+        content: event.description || event.title,
+        timestamp: event.created_at,
+        importance: event.importance_level
+      }));
+    } catch (error) {
+      console.error('❌ Failed to get recent memory:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Store story event (compatibility method)
+   */
+  async storeStoryEvent(characterId, eventData) {
+    try {
+      if (!this.currentSessionId) {
+        console.warn('No active session for event storage');
+        return null;
+      }
+
+      const eventId = await database.recordEvent(this.currentSessionId, {
+        type: eventData.type || 'scene',
+        title: eventData.metadata?.title || 'Scene Event',
+        description: eventData.content,
+        importance: IMPORTANCE_LEVELS.MEDIUM,
+        metadata: eventData.metadata
+      });
+      
+      console.log('✅ Story event stored');
+      return eventId;
+    } catch (error) {
+      console.error('❌ Failed to store story event:', error);
+      return null;
+    }
+  }
+
+  /**
    * Initialize memory system with database
    */
   async initializeStory(characterPack, storyId = null) {

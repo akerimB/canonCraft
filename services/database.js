@@ -12,8 +12,8 @@ import { Platform } from 'react-native';
 // SQLite.DEBUG(true); 
 // SQLite.enablePromise(true); // expo-sqlite's transaction method returns a Promise-like object or can be wrapped in a Promise.
 
-const DATABASE_NAME = 'InCharacterDB.db';
-const STORAGE_PREFIX = 'InCharacterDB_';
+const DATABASE_NAME = 'CanonCraftDB.db';
+const STORAGE_PREFIX = 'CanonCraftDB_';
 
 class DatabaseManager {
   constructor() {
@@ -29,7 +29,7 @@ class DatabaseManager {
     if (this.isInitialized) return this.db;
 
     try {
-      console.log('🗄️ Initializing InCharacter database...');
+      console.log('🗄️ Initializing CanonCraft database...');
       
       if (this.isWeb) {
         // For web, we'll use AsyncStorage with a simple key-value structure

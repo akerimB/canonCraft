@@ -1,7 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 
-export default function PersonaMeter({ score }) {
+// A default avatar image, replace with dynamic user avatar later
+const defaultAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face';
+
+export default function PersonaMeter({ score, avatarUri }) {
   const getPersonaColor = (score) => {
     if (score >= 80) return '#4CAF50'; // Green - Perfect
     if (score >= 60) return '#8BC34A'; // Light Green - Great
@@ -18,32 +21,31 @@ export default function PersonaMeter({ score }) {
     return 'Off-Character';
   };
 
-  const meterWidth = `${score}%`;
+  const meterWidth = score ? `${score}%` : '0%';
   const meterColor = getPersonaColor(score);
   const label = getPersonaLabel(score);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.label}>Persona Meter</Text>
-        <Text style={styles.score}>{score}/100</Text>
+      <View style={styles.avatarContainer}>
+        <Image 
+          source={{ uri: avatarUri || defaultAvatar }} 
+          style={styles.avatar} 
+        />
       </View>
-      
-      <View style={styles.meterContainer}>
+      <View style={styles.meterWrapper}>
+        <View style={styles.header}>
+          <Text style={styles.label}>PERSONA METER</Text>
+          <Text style={styles.scoreText}>{score}/100</Text>
+        </View>
         <View style={styles.meterBackground}>
           <View 
             style={[
               styles.meterFill, 
-              { 
-                width: meterWidth, 
-                backgroundColor: meterColor 
-              }
+              { width: meterWidth }
             ]} 
           />
         </View>
-        <Text style={[styles.statusLabel, { color: meterColor }]}>
-          {label}
-        </Text>
       </View>
     </View>
   );
@@ -51,49 +53,50 @@ export default function PersonaMeter({ score }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#16213e',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F0F2F5', // Match the new background
     paddingHorizontal: 20,
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#0f3460',
+  },
+  avatarContainer: {
+    marginRight: 15,
+  },
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+  },
+  meterWrapper: {
+    flex: 1,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#eee2dc',
+    color: '#333333',
   },
-  score: {
+  scoreText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#e85a4f',
-  },
-  meterContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    color: '#333333',
   },
   meterBackground: {
-    flex: 1,
-    height: 8,
-    backgroundColor: '#0f3460',
-    borderRadius: 4,
-    marginRight: 15,
+    height: 12,
+    backgroundColor: '#E0E0E0',
+    borderRadius: 6,
     overflow: 'hidden',
   },
   meterFill: {
     height: '100%',
-    borderRadius: 4,
-    minWidth: 2, // Ensure some visibility even at 0
-  },
-  statusLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    minWidth: 80,
-    textAlign: 'right',
+    backgroundColor: '#2ECC71', // A nice teal/green color
+    borderRadius: 6,
   },
 }); 
